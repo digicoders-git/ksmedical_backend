@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 import KYC from "./models/KYC.js";
 import Withdrawal from "./models/Withdrawal.js";
 import User from "./models/User.js";
+import MLM from "./models/MLM.js";
+import MLMTransaction from "./models/MLMTransaction.js";
 
 dotenv.config();
 
@@ -58,6 +60,8 @@ const seedDatabase = async () => {
     console.log("🗑️  Clearing existing test data...");
     await KYC.deleteMany({});
     await Withdrawal.deleteMany({});
+    await MLM.deleteMany({});
+    await MLMTransaction.deleteMany({});
     await User.deleteMany({ email: { $in: testUsers.map(u => u.email) } });
 
     // Create test users
@@ -265,6 +269,38 @@ const seedDatabase = async () => {
     console.log("   - Amit Kumar (REJECTED) → 0 withdrawals");
     console.log("   - Sneha Patel (PENDING) → 0 withdrawals");
     console.log("   - Rajesh Verma (PENDING) → 0 withdrawals");
+
+    // Create MLM data
+    console.log("\n🔗 Creating MLM referral structure...");
+    // Main user: Rahul Sharma (createdUsers[0])
+    const rahulMLM = await MLM.create({
+      userId: createdUsers[0]._id,
+      referralCode: "RAHUL123",
+      totalReferrals: 3,
+      activeReferrals: 3,
+      level1Referrals: 1, // Priya
+      level2Referrals: 1, // Amit
+      level3Referrals: 1, // Sneha
+      totalEarnings: 850,
+      availableBalance: 850,
+      monthlyEarnings: 850,
+      referrals: [
+        { userId: createdUsers[1]._id, level: 1, joinedAt: new Date("2024-01-20"), isActive: true, totalEarned: 500 },
+        { userId: createdUsers[2]._id, level: 2, joinedAt: new Date("2024-01-21"), isActive: true, totalEarned: 250 },
+        { userId: createdUsers[3]._id, level: 3, joinedAt: new Date("2024-01-22"), isActive: true, totalEarned: 100 },
+      ]
+    });
+
+    // Add MLM Transactions
+    await MLMTransaction.insertMany([
+      { userId: createdUsers[0]._id, type: "referral", amount: 500, description: "Level 1 Referral: Priya Singh", relatedUser: createdUsers[1]._id, level: 1, status: "completed" },
+      { userId: createdUsers[0]._id, type: "commission", amount: 250, description: "Level 2 Commission: Amit Kumar", relatedUser: createdUsers[2]._id, level: 2, status: "completed" },
+      { userId: createdUsers[0]._id, type: "commission", amount: 100, description: "Level 3 Commission: Sneha Patel", relatedUser: createdUsers[3]._id, level: 3, status: "completed" },
+    ]);
+
+    console.log("✅ Created MLM hierarchy for Rahul Sharma");
+    console.log(`   - Referral Code: ${rahulMLM.referralCode}`);
+    console.log(`   - Use Rahul's ID for testing: ${createdUsers[0]._id}`);
 
     process.exit(0);
   } catch (error) {

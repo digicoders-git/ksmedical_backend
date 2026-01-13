@@ -2,6 +2,7 @@
 import MLM from "../models/MLM.js";
 import MLMTransaction from "../models/MLMTransaction.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 // @desc    Get MLM dashboard data for a user
 // @route   GET /api/mlm/dashboard/:userId
@@ -9,6 +10,14 @@ import User from "../models/User.js";
 export const getMLMDashboard = async (req, res) => {
   try {
     const { userId } = req.params;
+    
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ 
+        message: "Invalid User ID format. Please use a valid MongoDB ObjectId.",
+        suggestion: "If you are testing, use a real ID from your Users collection."
+      });
+    }
 
     // Get MLM data
     let mlmData = await MLM.findOne({ userId }).populate("userId", "firstName lastName email");
@@ -57,6 +66,13 @@ export const getMLMDashboard = async (req, res) => {
 export const getUserReferrals = async (req, res) => {
   try {
     const { userId } = req.params;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ 
+        message: "Invalid User ID format. Please use a valid MongoDB ObjectId."
+      });
+    }
 
     const mlmData = await MLM.findOne({ userId })
       .populate({
@@ -213,6 +229,11 @@ export const getMLMTransactions = async (req, res) => {
   try {
     const { userId } = req.params;
     const { type, limit = 50 } = req.query;
+
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid User ID format" });
+    }
 
     const filter = { userId };
     if (type && type !== "all") {
