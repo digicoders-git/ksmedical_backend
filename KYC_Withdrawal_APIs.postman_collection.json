@@ -1,0 +1,383 @@
+{
+  "info": {
+    "name": "KYC & Withdrawal APIs",
+    "description": "Complete API collection for KYC verification and withdrawal management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "KYC APIs",
+      "item": [
+        {
+          "name": "Submit KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USER_ID_HERE\",\n  \"fullName\": \"Rahul Sharma\",\n  \"email\": \"rahul@example.com\",\n  \"phone\": \"+91 9876543210\",\n  \"address\": \"123 Main Street, Sector 15, Noida, UP - 201301\",\n  \"panCard\": \"ABCDE1234F\",\n  \"aadharCard\": \"123456789012\",\n  \"documents\": {\n    \"panImage\": \"https://cloudinary.com/pan_image.jpg\",\n    \"aadharFrontImage\": \"https://cloudinary.com/aadhar_front.jpg\",\n    \"aadharBackImage\": \"https://cloudinary.com/aadhar_back.jpg\",\n    \"bankPassbook\": \"https://cloudinary.com/passbook.jpg\",\n    \"selfie\": \"https://cloudinary.com/selfie.jpg\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/kyc/submit",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kyc", "submit"]
+            }
+          }
+        },
+        {
+          "name": "Get KYC Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/kyc/status/:userId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kyc", "status", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "USER_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All KYC Requests (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/kyc/all?status=all",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kyc", "all"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "all",
+                  "description": "all, pending, approved, rejected"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get KYC by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/kyc/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kyc", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "KYC_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve KYC (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminId\": \"ADMIN_ID_HERE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/kyc/approve/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kyc", "approve", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "KYC_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject KYC (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminId\": \"ADMIN_ID_HERE\",\n  \"reason\": \"PAN card image is not clear. Please upload a clearer image.\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/kyc/reject/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kyc", "reject", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "KYC_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get KYC Statistics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/kyc/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "kyc", "stats"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Withdrawal APIs",
+      "item": [
+        {
+          "name": "Create Withdrawal (Bank)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USER_ID_HERE\",\n  \"amount\": 5000,\n  \"paymentMethod\": {\n    \"type\": \"bank\",\n    \"bankName\": \"HDFC Bank\",\n    \"accountNumber\": \"12345678901234\",\n    \"ifscCode\": \"HDFC0001234\",\n    \"accountHolder\": \"Rahul Sharma\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/create",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "create"]
+            }
+          }
+        },
+        {
+          "name": "Create Withdrawal (UPI)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"USER_ID_HERE\",\n  \"amount\": 3000,\n  \"paymentMethod\": {\n    \"type\": \"upi\",\n    \"upiId\": \"rahul@phonepe\"\n  }\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/create",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "create"]
+            }
+          }
+        },
+        {
+          "name": "Get User Withdrawals",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/user/:userId",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "user", ":userId"],
+              "variable": [
+                {
+                  "key": "userId",
+                  "value": "USER_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get All Withdrawals (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/all?status=all",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "all"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "all",
+                  "description": "all, pending, approved, completed, rejected"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Withdrawal by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "WITHDRAWAL_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Approve Withdrawal (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminId\": \"ADMIN_ID_HERE\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/approve/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "approve", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "WITHDRAWAL_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Reject Withdrawal (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"adminId\": \"ADMIN_ID_HERE\",\n  \"reason\": \"Insufficient balance\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/reject/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "reject", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "WITHDRAWAL_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Complete Withdrawal (Admin)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"transactionId\": \"TXN123456789\",\n  \"transactionProof\": \"https://cloudinary.com/transaction_proof.jpg\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/complete/:id",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "complete", ":id"],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "WITHDRAWAL_ID_HERE"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Withdrawal Statistics (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:5000/api/withdrawals/stats",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "5000",
+              "path": ["api", "withdrawals", "stats"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

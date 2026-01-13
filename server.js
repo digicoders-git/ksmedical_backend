@@ -25,6 +25,13 @@ import cartRoutes from "./routes/cartRoutes.js";
 import wishlistRoutes from "./routes/wishlistRoutes.js";
 import userOrderRoutes from "./routes/userOrderRoutes.js";
 
+// KYC and Withdrawal routes
+import kycRoutes from "./routes/kycRoutes.js";
+import withdrawalRoutes from "./routes/withdrawalRoutes.js";
+
+// MLM routes
+import mlmRoutes from "./routes/mlmRoutes.js";
+
 const app = express();
 
 app.use(helmet());
@@ -71,6 +78,13 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/user-orders", userOrderRoutes); 
 
+// KYC and Withdrawal routes
+app.use("/api/kyc", kycRoutes);
+app.use("/api/withdrawals", withdrawalRoutes);
+
+// MLM routes
+app.use("/api/mlm", mlmRoutes);
+ 
 // Default
 app.get("/", (_req, res) => res.send("✅ API is running..."));
 
