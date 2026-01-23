@@ -58,6 +58,11 @@ const orderSchema = new mongoose.Schema(
 
     shippingAddress: { type: addressSchema, required: true },
     notes: { type: String, default: "" },
+    
+    prescriptionImage: {
+      url: { type: String },
+      publicId: { type: String },
+    },
   },
   { timestamps: true }
 );

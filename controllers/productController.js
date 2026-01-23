@@ -2,6 +2,8 @@
 import Product from "../models/Product.js";
 import Category from "../models/Category.js";
 import { cloudinary } from "../config/cloudinary.js";
+import csv from "csv-parser";
+import { Readable } from "stream";
 
 const parseMaybeJSON = (value, fallback) => {
   if (!value) return fallback;
@@ -24,7 +26,18 @@ export const createProduct = async (req, res) => {
   try {
     const {
       name,
-      price,
+      price, // Map to sellingPrice
+      sellingPrice,
+      mrp,
+      purchasePrice,
+      margin,
+      stock,
+      unit,
+      manufacturer,
+      batchNo,
+      expiryDate,
+      prescriptionRequired,
+      gst,
       discountPercent,
       sizes,
       colors,
@@ -64,7 +77,18 @@ export const createProduct = async (req, res) => {
     const product = await Product.create({
       name,
       category: category._id,
-      price: Number(price),
+      price: Number(sellingPrice || price), 
+      sellingPrice: Number(sellingPrice || price),
+      mrp: Number(mrp || 0),
+      purchasePrice: Number(purchasePrice || 0),
+      margin: Number(margin || 0),
+      stock: Number(stock || 0),
+      unit: unit || "Pcs",
+      manufacturer: manufacturer || "",
+      batchNo: batchNo || "",
+      expiryDate: expiryDate ? new Date(expiryDate) : undefined,
+      prescriptionRequired: prescriptionRequired === "true" || prescriptionRequired === true,
+      gst: Number(gst || 0),
       discountPercent: Number(discountPercent || 0),
       mainImage: {
         url: mainImageFile.path,
@@ -130,6 +154,17 @@ export const updateProduct = async (req, res) => {
     const {
       name,
       price,
+      sellingPrice,
+      mrp,
+      purchasePrice,
+      margin,
+      stock,
+      unit,
+      manufacturer,
+      batchNo,
+      expiryDate,
+      prescriptionRequired,
+      gst,
       discountPercent,
       sizes,
       colors,
@@ -151,7 +186,23 @@ export const updateProduct = async (req, res) => {
         Date.now();
     }
 
-    if (price) product.price = Number(price);
+    const finalSellingPrice = sellingPrice || price;
+    if (finalSellingPrice) {
+        product.price = Number(finalSellingPrice);
+        product.sellingPrice = Number(finalSellingPrice);
+    }
+    
+    if (mrp !== undefined) product.mrp = Number(mrp);
+    if (purchasePrice !== undefined) product.purchasePrice = Number(purchasePrice);
+    if (margin !== undefined) product.margin = Number(margin);
+    if (stock !== undefined) product.stock = Number(stock);
+    if (unit !== undefined) product.unit = unit;
+    if (manufacturer !== undefined) product.manufacturer = manufacturer;
+    if (batchNo !== undefined) product.batchNo = batchNo;
+    if (expiryDate !== undefined) product.expiryDate = expiryDate ? new Date(expiryDate) : undefined;
+    if (prescriptionRequired !== undefined) product.prescriptionRequired = prescriptionRequired === "true" || prescriptionRequired === true;
+    if (gst !== undefined) product.gst = Number(gst);
+    
     if (discountPercent !== undefined)
       product.discountPercent = Number(discountPercent);
 
@@ -212,7 +263,110 @@ export const deleteProduct = async (req, res) => {
     await Product.deleteOne({ _id: product._id });
     res.json({ message: "Product deleted" });
   } catch (err) {
-    console.error("deleteProduct error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// BULK UPLOAD
+export const bulkUploadProducts = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No CSV file uploaded" });
+    }
+
+    const results = [];
+    const stream = Readable.from(req.file.buffer.toString());
+
+    stream
+      .pipe(csv())
+      .on("data", (data) => results.push(data))
+      .on("end", async () => {
+        try {
+          let addedCount = 0;
+          let skippedCount = 0;
+          const errors = [];
+
+          // Pre-fetch categories for mapping
+          const categories = await Category.find({});
+          const categoryMap = {}; // Name -> ID
+          categories.forEach((c) => {
+            categoryMap[c.name.toLowerCase()] = c._id;
+          });
+          
+          // Get a default category if any, or create one
+          let defaultCategory = categories[0]?._id;
+           if(!defaultCategory) {
+               const newCat = await Category.create({ name: "General", slug: "general" });
+               defaultCategory = newCat._id;
+               categoryMap["general"] = newCat._id;
+           }
+
+          for (const row of results) {
+             // Normalize keys (trim spaces, lowercase)
+             const cleanRow = {};
+             Object.keys(row).forEach(key => {
+                 cleanRow[key.trim().toLowerCase()] = row[key]?.trim();
+             });
+             
+             const name = cleanRow["name"] || cleanRow["product name"];
+             if (!name) {
+                 skippedCount++;
+                 continue;
+             }
+             
+             const price = parseFloat(cleanRow["price"] || cleanRow["selling price"] || "0");
+             const purchasePrice = parseFloat(cleanRow["purchase price"] || "0");
+             const mrp = parseFloat(cleanRow["mrp"] || "0");
+             const stock = parseInt(cleanRow["stock"] || cleanRow["stock qty"] || "0");
+             
+             // Category handling
+             let categoryId = defaultCategory;
+             const catName = (cleanRow["category"] || "").toLowerCase();
+             if(catName && categoryMap[catName]) {
+                 categoryId = categoryMap[catName];
+             }
+             
+             try {
+                await Product.create({
+                    name,
+                    category: categoryId,
+                    sellingPrice: price || 0,
+                    price: price || 0, // Fallback
+                    purchasePrice,
+                    mrp,
+                    stock,
+                    unit: cleanRow["unit"] || "Pcs",
+                    manufacturer: cleanRow["manufacturer"] || "",
+                    batchNo: cleanRow["batch no"] || cleanRow["batchno"] || "",
+                    expiryDate: cleanRow["expiry date"] ? new Date(cleanRow["expiry date"]) : undefined,
+                    description: cleanRow["description"] || "",
+                    prescriptionRequired: cleanRow["prescription required"] === "yes" || cleanRow["prescription required"] === "true",
+                    gst: parseFloat(cleanRow["gst"] || "0"),
+                    margin: 0,
+                    mainImage: {
+                        url: cleanRow["image url"] || "https://placehold.co/400", 
+                        publicId: "placeholder_" + Date.now() 
+                    },
+                    isActive: true
+                });
+                addedCount++;
+             } catch (e) {
+                 skippedCount++;
+                 errors.push(`Error adding ${name}: ${e.message}`);
+             }
+          }
+
+          res.json({
+            message: `Processed CSV. Added: ${addedCount}, Skipped/Failed: ${skippedCount}`,
+            errors: errors.slice(0, 10)
+          });
+        } catch (err) {
+          console.error("Bulk process error:", err);
+          res.status(500).json({ message: "Error processing CSV data", error: err.message });
+        }
+      });
+  } catch (err) {
+    console.error("bulkUploadProducts error:", err);
     res.status(500).json({ message: "Server error" });
   }
 };

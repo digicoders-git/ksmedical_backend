@@ -4,13 +4,13 @@ import Product from "../models/Product.js";
 
 export const createCategory = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, defaultUnit, gst } = req.body;
     if (!name) return res.status(400).json({ message: "name is required" });
 
     const exists = await Category.findOne({ name });
     if (exists) return res.status(409).json({ message: "Category exists" });
 
-    const category = await Category.create({ name, description });
+    const category = await Category.create({ name, description, defaultUnit, gst });
     res.status(201).json({ message: "Category created", category });
   } catch (err) {
     console.error("createCategory error:", err);
@@ -52,7 +52,7 @@ export const updateCategory = async (req, res) => {
       (await Category.findById(idOrSlug));
     if (!category) return res.status(404).json({ message: "Not found" });
 
-    const { name, description, isActive } = req.body;
+    const { name, description, isActive, defaultUnit, gst } = req.body;
 
     if (name) {
       category.name = name;
@@ -64,6 +64,8 @@ export const updateCategory = async (req, res) => {
     }
     if (description !== undefined) category.description = description;
     if (isActive !== undefined) category.isActive = !!isActive;
+    if (defaultUnit !== undefined) category.defaultUnit = defaultUnit;
+    if (gst !== undefined) category.gst = Number(gst);
 
     await category.save();
     res.json({ message: "Category updated", category });

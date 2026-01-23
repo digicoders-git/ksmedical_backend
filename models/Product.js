@@ -29,9 +29,24 @@ const productSchema = new mongoose.Schema(
       required: true,
     },
 
-    price: { type: Number, required: true, min: 0 },
+    manufacturer: { type: String, default: "" },
+    batchNo: { type: String, default: "" },
+    expiryDate: { type: Date },
+
+    mrp: { type: Number, default: 0 },
+    purchasePrice: { type: Number, default: 0 },
+    sellingPrice: { type: Number, required: true, min: 0 }, // Was "price"
+    price: { type: Number, default: 0 }, // Kept for backward compat or alias to sellingPrice
+
+    margin: { type: Number, default: 0 }, // % or value
+    stock: { type: Number, default: 0 },
+    unit: { type: String, default: "Pcs" },
+    
+    prescriptionRequired: { type: Boolean, default: false },
+    gst: { type: Number, default: 0 }, // %
+
     discountPercent: { type: Number, default: 0, min: 0, max: 100 },
-    finalPrice: { type: Number, default: 0 },
+    finalPrice: { type: Number, default: 0 }, // Calculated: sellingPrice - discount
 
     mainImage: { type: imageSchema, required: true },
     galleryImages: [imageSchema],
@@ -58,7 +73,14 @@ productSchema.pre("save", function (next) {
   }
 
   const discount = this.discountPercent || 0;
-  this.finalPrice = Math.round(this.price * (1 - discount / 100));
+  // Ensure price is synced with sellingPrice if sellingPrice is provided
+  if (this.sellingPrice) {
+      this.price = this.sellingPrice;
+  } else if (this.price) {
+      this.sellingPrice = this.price;
+  }
+  
+  this.finalPrice = Math.round((this.sellingPrice || this.price || 0) * (1 - discount / 100));
 
   if (!this.addOns || this.addOns.length === 0) {
     this.addOns = [{ name: "None", price: 0, isDefault: true }];
