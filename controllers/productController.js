@@ -46,7 +46,7 @@ export const createProduct = async (req, res) => {
     }
 
     if (!req.files || !req.files.mainImage || !req.files.mainImage[0]) {
-      return res.status(400).json({ message: "mainImage is required" });
+      return res.status(400).json({ message: "Main Image is required" });
     }
 
     const mainImageFile = req.files.mainImage[0];

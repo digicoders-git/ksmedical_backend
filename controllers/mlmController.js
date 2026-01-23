@@ -19,6 +19,12 @@ export const getMLMDashboard = async (req, res) => {
       });
     }
 
+    // Check if user exists check
+    const userExists = await User.findById(userId);
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     // Get MLM data
     let mlmData = await MLM.findOne({ userId }).populate("userId", "firstName lastName email");
     
@@ -72,6 +78,11 @@ export const getUserReferrals = async (req, res) => {
       return res.status(400).json({ 
         message: "Invalid User ID format. Please use a valid MongoDB ObjectId."
       });
+    }
+
+    const userExists = await User.findById(userId);
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     const mlmData = await MLM.findOne({ userId })
@@ -233,6 +244,11 @@ export const getMLMTransactions = async (req, res) => {
     // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid User ID format" });
+    }
+
+    const userExists = await User.findById(userId);
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found" });
     }
 
     const filter = { userId };
