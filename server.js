@@ -32,6 +32,9 @@ import withdrawalRoutes from "./routes/withdrawalRoutes.js";
 // MLM routes
 import mlmRoutes from "./routes/mlmRoutes.js";
 
+// Shop routes
+import shopRoutes from "./routes/shopRoutes.js";
+
 const app = express();
 
 app.use(helmet());
@@ -84,6 +87,9 @@ app.use("/api/withdrawals", withdrawalRoutes);
 
 // MLM routes
 app.use("/api/mlm", mlmRoutes);
+
+// Shop routes
+app.use("/api/shops", shopRoutes);
  
 // Default
 app.get("/", (_req, res) => res.send("✅ API is running..."));
